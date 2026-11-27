@@ -278,7 +278,7 @@ document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{
 (function(){
   const f=x=>-x*x+2*x+3;
   const G=new Graph($("t-svg"));G.setWindow(-3.5,5.5,-6.5,5.5);
-  const FORMS=["Un nombre","Un point (x ; y)","Une équation x = …","Un intervalle","Une expression f(x) = …","Un tableau","Un mot ou une phrase"];
+  const FORMS=["Un ou des nombre(s)","Un ou des point(s) (x ; y)","Une équation x = …","Un ou des intervalle(s)","Une expression f(x) = …","Un tableau","Un mot ou une phrase"];
   const C={ racines:"Δ = b² − 4ac, puis x₁,₂ = (−b ± √Δ) / 2a", oao:"f(0) = c", sommet:"h = b/2a et k = −Δ/4a, puis S(−h ; k)", axe:"h = b/2a, puis x = −h",
     im:"k = −Δ/4a, et je regarde le signe de a", conc:"Je regarde le signe de a", delta:"Δ = b² − 4ac (je regarde son signe)", canon:"h et k, puis a(x + h)² + k",
     crois:"L'abscisse du sommet (−h) et le signe de a", signes:"Les racines, puis le signe de a entre et hors des racines", absc:"f(2) : je remplace x par 2", ordo:"Je résous f(x) = −5 : je connais y, je cherche x",
@@ -354,7 +354,7 @@ document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{
       $("t-score").textContent="Sans faute : "+perfect+" / "+done;$("t-next").hidden=false;
       msg($("t-msg"),(clean?"Parfait, sans faute ! ":"Trouvé. ")+"Consigne → endroit → calcul → forme : c'est ça, traduire.","ok");$("t-next").focus();
     }else{clean=false;b.classList.add("wrong");b.disabled=true;
-      msg($("t-msg"),"Pas cette forme. Indice : un point s'écrit (x ; y), une droite verticale x = …, une zone de valeurs [ ; ].","bad")}
+      msg($("t-msg"),"Pas cette forme. Indice : un point s'écrit (x ; y) — « coordonnées » ou « intersection » = des points ; « racines » ou « résous » = des nombres x ; une droite verticale s'écrit x = … ; une zone de valeurs [ ; ].","bad")}
   }
   $("t-next").onclick=load;load();
 })();
