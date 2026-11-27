@@ -124,7 +124,7 @@ svg.graph{width:100%;height:auto;display:block;touch-action:manipulation;user-se
         <div class="row"><span class="hint">f(x) = −x² + 2x + 3</span><span class="score" id="t-score">Sans faute : 0 / 0</span></div>
         <div class="consigne" id="t-cons"></div>
         <div class="step" id="t-s1">① Sur le graphe, c'est quoi ? Clique dessus.</div>
-        <div class="step" id="t-s2" hidden>② Je calcule…</div>
+        <div class="step" id="t-s2" hidden>② Je calcule… (ou j'utilise)</div>
         <div class="opts" id="t-calc" hidden></div>
         <div class="step" id="t-s3" hidden>③ Je réponds sous forme de…</div>
         <div class="opts" id="t-form" hidden></div>
@@ -295,12 +295,12 @@ document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{
     {c:"Détermine l'ensemble image de f.",t:"im",k:"im",f:3,why:"Im f = toutes les hauteurs (y) atteintes par la courbe. Ici a < 0 : Im f = ]−∞ ; k]."},
     {c:"Quelle est la concavité de la parabole ?",t:"courbe",k:"conc",f:6,why:"Concavité = vers où s'ouvre la parabole. a > 0 : vers le haut ∪ ; a < 0 : vers le bas ∩."},
     {c:"Combien de fois la parabole coupe-t-elle l'axe des x ?",t:"racines",k:"delta",f:0,why:"C'est le rôle de Δ : Δ > 0 → 2 racines, Δ = 0 → 1, Δ < 0 → aucune."},
-    {c:"Exprime f sous forme canonique.",t:"sommet",k:"canon",f:4,why:"La forme canonique a(x + h)² + k « montre » le sommet S(−h ; k)."},
+    {c:"Exprime f sous forme canonique.",t:null,k:"canon",f:4,why:"Pas de point à cliquer : c'est une réécriture algébrique de f(x). Mais elle se construit avec les nombres du sommet : h et k."},
     {c:"Donne les intervalles de croissance et de décroissance.",t:"sommet",k:"crois",f:3,why:"La courbe change de sens au sommet : avant −h elle monte (ici), après elle descend."},
     {c:"Établis le tableau de signes de f.",t:"racines",k:"signes",f:5,why:"Le signe change aux racines : c'est là que la courbe passe au-dessus ou en dessous de l'axe des x."},
     {c:"Détermine la coordonnée du point d'abscisse 2 de la parabole.",t:"absc",k:"absc",f:1,why:"Abscisse = x. On connaît x = 2, on calcule y = f(2) : le point (2 ; f(2))."},
     {c:"Détermine les coordonnées des points d'ordonnée −5 de la parabole.",t:"ordo",k:"ordo",f:1,why:"Ordonnée = y. On connaît y = −5, on cherche x en résolvant f(x) = −5. Ce n'est PAS f(−5) !"},
-    {c:"Exprime f sous forme factorisée.",t:"racines",k:"fact",f:4,why:"La forme factorisée a(x − x₁)(x − x₂) se construit avec les racines."}
+    {c:"Exprime f sous forme factorisée.",t:null,k:"fact",f:4,why:"Pas de point à cliquer : c'est une réécriture algébrique de f(x). Mais elle se construit avec les racines x₁ et x₂."}
   ];
   /* hotspots */
   const hot={};
@@ -325,16 +325,21 @@ document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{
     $("t-cons").textContent="« "+item.c+" »";
     ["t-s2","t-calc","t-s3","t-form","t-next"].forEach(i=>$(i).hidden=true);
     msg($("t-msg"),"","");
+    $("t-s1").hidden=item.t===null;
+    if(item.t===null){stage=2;msg($("t-msg"),item.why,"info");showCalc()}
   }
   function pick(id){
     if(stage!==1)return;
     if(id===item.t){hot[id].classList.add("good");stage=2;
       msg($("t-msg"),"Oui : c'est "+NAMES[id]+". "+item.why,"ok");
+      showCalc();
+    }else{clean=false;hot[id].classList.add("badc");setTimeout(()=>hot[id].classList.remove("badc"),900);
+      msg($("t-msg"),"Non, ça c'est "+NAMES[id]+". Relis les mots de la consigne : abscisse = x, ordonnée = y, origine = là où x = 0.","bad")}
+  }
+  function showCalc(){
       const opts=shuffle([item.k,...shuffle(Object.keys(C).filter(k=>k!==item.k&&C[k]!==C[item.k])).slice(0,3)]);
       $("t-calc").innerHTML="";opts.forEach(k=>{const b=document.createElement("button");b.className="opt";b.textContent=C[k];b.onclick=()=>calc(k,b);$("t-calc").appendChild(b)});
       $("t-s2").hidden=false;$("t-calc").hidden=false;
-    }else{clean=false;hot[id].classList.add("badc");setTimeout(()=>hot[id].classList.remove("badc"),900);
-      msg($("t-msg"),"Non, ça c'est "+NAMES[id]+". Relis les mots de la consigne : abscisse = x, ordonnée = y, origine = là où x = 0.","bad")}
   }
   function calc(k,b){
     if(stage!==2)return;
