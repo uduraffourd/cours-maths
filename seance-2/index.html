@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Le traducteur de paraboles</title>
+<style>
+:root{
+  --bg:#f6f5f1; --card:#ffffff; --ink:#1d1f24; --muted:#6b6f78; --line:#e3e1da;
+  --grid:#ecebe5; --axis:#555a63; --accent:#2f5bd3; --accent-soft:#e4ebfb;
+  --ok:#1f8a4c; --ok-soft:#e2f4ea; --bad:#c2412d; --bad-soft:#fbe7e3; --curve:#2f5bd3; --hot:#e08a1e; --hot-soft:#fbeedd; --ghost:#b9bdc6;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#16181c; --card:#1f2228; --ink:#eceef2; --muted:#9aa0aa; --line:#30343c;
+    --grid:#2a2e35; --axis:#a9aeb7; --accent:#7f9cf5; --accent-soft:#263255;
+    --ok:#5cc98a; --ok-soft:#1d3a2a; --bad:#f08470; --bad-soft:#41241f; --curve:#7f9cf5; --hot:#f0a54a; --hot-soft:#3d2e1a; --ghost:#5a5f69;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#16181c; --card:#1f2228; --ink:#eceef2; --muted:#9aa0aa; --line:#30343c;
+  --grid:#2a2e35; --axis:#a9aeb7; --accent:#7f9cf5; --accent-soft:#263255;
+  --ok:#5cc98a; --ok-soft:#1d3a2a; --bad:#f08470; --bad-soft:#41241f; --curve:#7f9cf5; --hot:#f0a54a; --hot-soft:#3d2e1a; --ghost:#5a5f69;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:17px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1120px;margin:0 auto;padding:20px 16px 40px}
+header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+h1{font-size:28px;margin:0;letter-spacing:-.02em}
+.sub{color:var(--muted);font-size:15px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.tab{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:10px 14px;border-radius:10px;font:inherit;font-weight:600;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:16px}
+@media (max-width:820px){.grid2{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}
+.big{font-size:21px;font-weight:700;line-height:1.3}
+.score{margin-left:auto;font-weight:700;color:var(--muted)}
+.consigne{font-size:21px;font-weight:700;padding:14px 16px;border-radius:12px;background:var(--hot-soft);border-left:5px solid var(--hot);margin:8px 0 14px}
+.step{font-weight:700;color:var(--muted);font-size:14px;letter-spacing:.04em;text-transform:uppercase;margin-top:12px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+@media (max-width:480px){.opts{grid-template-columns:1fr}}
+.opt{font:inherit;font-size:16px;font-weight:600;padding:11px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;text-align:left}
+.opt:disabled{cursor:default}
+.opt.wrong{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.opt.right{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+.msg{margin-top:10px;padding:10px 12px;border-radius:10px;font-weight:600}
+.msg.ok{background:var(--ok-soft);color:var(--ok)}
+.msg.bad{background:var(--bad-soft);color:var(--bad)}
+.msg.info{background:var(--accent-soft);color:var(--ink)}
+.msg:empty{display:none}
+button.btn{font:inherit;font-weight:700;padding:10px 16px;border-radius:10px;border:none;background:var(--accent);color:#fff;cursor:pointer}
+button.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+input[type=text]{font:inherit;font-size:19px;width:110px;padding:8px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
+input[type=text]:focus,button:focus-visible,.opt:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+label{font-weight:600}
+.expr{font-family:"Cambria Math","Times New Roman",serif;font-size:24px;font-weight:700}
+.manips{margin:8px 0 0;padding-left:20px}
+.manips li{margin:3px 0}
+.recap{margin:8px 0 0;padding-left:20px;font-variant-numeric:tabular-nums}
+.slider{display:grid;grid-template-columns:28px 1fr 56px;gap:10px;align-items:center;margin:8px 0}
+.slider b{font-family:"Cambria Math","Times New Roman",serif;font-size:22px}
+.slider output{font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.signs{display:grid;grid-template-columns:auto 1fr;gap:8px 12px;align-items:center;margin-top:8px}
+.signs .q{font-family:"Cambria Math","Times New Roman",serif;font-size:22px;font-weight:700}
+.sgn{display:flex;gap:6px}
+.sgn button{font:inherit;font-weight:700;min-width:62px;padding:8px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.sgn button.right{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+.sgn button.wrong{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.hint{color:var(--muted);font-size:15px}
+svg.graph{width:100%;height:auto;display:block;touch-action:manipulation;user-select:none}
+.g-grid line{stroke:var(--grid);stroke-width:1}
+.g-axis line{stroke:var(--axis);stroke-width:1.6}
+.g-axis text{fill:var(--muted);font-size:13px;font-family:inherit}
+.curve{fill:none;stroke:var(--curve);stroke-width:3}
+.curve.ghost{stroke:var(--ghost);stroke-width:2;stroke-dasharray:6 6}
+.curve.target{stroke:var(--hot);stroke-width:3.5;stroke-dasharray:9 7}
+.curve.draw{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:draw 1.8s ease-in-out forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+@media (prefers-reduced-motion: reduce){.curve.draw{animation:none;stroke-dashoffset:0}}
+.pt{fill:var(--accent);stroke:var(--card);stroke-width:2}
+.pt.ok{fill:var(--ok)} .pt.bad{fill:var(--bad)} .pt.hot{fill:var(--hot)}
+.axe{stroke:var(--ok);stroke-width:2.5;stroke-dasharray:8 6}
+.ptlabel{font-size:14px;font-weight:700;fill:var(--ink)}
+.clickable{cursor:crosshair}
+/* hotspots tab 1 */
+.hs{cursor:pointer}
+.hs .vis{transition:stroke .15s, fill .15s}
+.hs .hit{stroke:transparent;fill:transparent}
+.hs:hover .vis.pt-vis,.hs:focus .vis.pt-vis{fill:var(--hot)}
+.hs:hover .vis.ln-vis,.hs:focus .vis.ln-vis{stroke:var(--hot)}
+.hs.good .vis.pt-vis{fill:var(--ok)} .hs.good .vis.ln-vis{stroke:var(--ok)}
+.hs.badc .vis.pt-vis{fill:var(--bad)} .hs.badc .vis.ln-vis{stroke:var(--bad)}
+.pt-vis{fill:var(--ink);stroke:var(--card);stroke-width:2}
+.ln-vis{fill:none;stroke:var(--ink);stroke-width:2.5}
+.ln-vis.dash{stroke-dasharray:8 6}
+.ln-vis.curvev{stroke:var(--curve);stroke-width:3.5}
+.ln-vis.bar{stroke-width:7;stroke-linecap:round}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Le traducteur de paraboles</h1>
+    <span class="sub">Chaque mot de consigne = un endroit sur le graphe + un calcul + une forme de réponse.</span>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-tab="trad">1 · Traduis la consigne</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="man">2 · Les manettes a, h, k</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="sig">3 · Détective des signes</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="cons">4 · Construis la parabole</button>
+  </div>
+
+  <!-- TAB 1 -->
+  <section class="panel" id="p-trad">
+    <div class="grid2">
+      <div class="card">
+        <div class="row"><span class="hint">f(x) = −x² + 2x + 3</span><span class="score" id="t-score">Sans faute : 0 / 0</span></div>
+        <div class="consigne" id="t-cons"></div>
+        <div class="step" id="t-s1">① Sur le graphe, c'est quoi ? Clique dessus.</div>
+        <div class="step" id="t-s2" hidden>② Je calcule…</div>
+        <div class="opts" id="t-calc" hidden></div>
+        <div class="step" id="t-s3" hidden>③ Je réponds sous forme de…</div>
+        <div class="opts" id="t-form" hidden></div>
+        <div class="msg" id="t-msg"></div>
+        <div class="row"><button class="btn" id="t-next" hidden>Consigne suivante</button></div>
+      </div>
+      <div class="card"><svg class="graph" id="t-svg" viewBox="0 0 600 600" aria-label="Graphe de f(x) = −x² + 2x + 3"></svg></div>
+    </div>
+  </section>
+
+  <!-- TAB 2 -->
+  <section class="panel" id="p-man" hidden>
+    <div class="grid2">
+      <div class="card">
+        <div class="row">
+          <button class="btn ghost" id="m-mode-explore">Explorer</button>
+          <button class="btn ghost" id="m-mode-defi">Défi : copie la parabole orange</button>
+          <span class="score" id="m-score"></span>
+        </div>
+        <div class="expr" id="m-expr"></div>
+        <div class="hint">Forme du cours : f(x) = a(x + h)² + k &nbsp;·&nbsp; S(−h ; k) &nbsp;·&nbsp; As ≡ x = −h</div>
+        <div class="slider"><b>a</b><input type="range" id="m-a" min="0" max="9" step="1" value="7" aria-label="a"><output id="m-ao"></output></div>
+        <div class="slider"><b>h</b><input type="range" id="m-h" min="-5" max="5" step="1" value="0" aria-label="h"><output id="m-ho"></output></div>
+        <div class="slider"><b>k</b><input type="range" id="m-k" min="-5" max="5" step="1" value="0" aria-label="k"><output id="m-ko"></output></div>
+        <div class="big" style="font-size:18px" id="m-sum"></div>
+        <ul class="manips" id="m-manips"></ul>
+        <div class="msg" id="m-msg"></div>
+        <div class="row" id="m-defi-btns" hidden><button class="btn" id="m-check">Vérifier</button><button class="btn ghost" id="m-new">Autre parabole</button></div>
+      </div>
+      <div class="card"><svg class="graph" id="m-svg" viewBox="0 0 600 600"></svg></div>
+    </div>
+  </section>
+
+  <!-- TAB 3 -->
+  <section class="panel" id="p-sig" hidden>
+    <div class="grid2">
+      <div class="card">
+        <div class="row"><span class="big">Quel est le signe de… ?</span><span class="score" id="s-score">Sans faute : 0 / 0</span></div>
+        <p class="hint" style="margin:4px 0 0">Regarde seulement le graphe. Pas de calcul.</p>
+        <div class="signs" id="s-qs"></div>
+        <div class="msg" id="s-msg"></div>
+        <div class="row"><button class="btn" id="s-next">Autre parabole</button></div>
+      </div>
+      <div class="card"><svg class="graph" id="s-svg" viewBox="0 0 600 600"></svg></div>
+    </div>
+  </section>
+
+  <!-- TAB 4 -->
+  <section class="panel" id="p-cons" hidden>
+    <div class="grid2">
+      <div class="card">
+        <div class="row"><span class="expr" id="c-f"></span><span class="score" id="c-prog"></span></div>
+        <div class="consigne" id="c-cons"></div>
+        <div class="hint" id="c-help"></div>
+        <div class="row" id="c-inputs"></div>
+        <div class="opts" id="c-choices" hidden></div>
+        <div class="msg" id="c-msg"></div>
+        <ul class="recap" id="c-recap" hidden></ul>
+        <div class="row"><button class="btn ghost" id="c-new">Autre fonction</button></div>
+      </div>
+      <div class="card"><svg class="graph clickable" id="c-svg" viewBox="0 0 600 600"></svg></div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+"use strict";
+const NS="http://www.w3.org/2000/svg";
+const $=id=>document.getElementById(id);
+const rand=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const eq=(a,b)=>Math.abs(a-b)<1e-9;
+function frac(v){ // nombre -> texte (fractions simples)
+  if(Number.isInteger(v)||eq(v,Math.round(v)))return String(Math.round(v)).replace("-","−");
+  for(let d=2;d<=12;d++){const n=v*d;if(eq(n,Math.round(n))){const body=Math.abs(Math.round(n))+"/"+d;const U={"1/2":"½","1/3":"⅓","1/4":"¼","2/3":"⅔","3/4":"¾"};return (Math.round(n)<0?"−":"")+(U[body]||body)}}
+  return (Math.round(v*100)/100).toString().replace(".",",").replace("-","−");
+}
+function parseNum(s){
+  if(s==null)return NaN;s=String(s).trim().replace(/\s/g,"").replace(/,/g,".").replace(/[−–]/g,"-");
+  let m=s.match(/^(-?\d+(?:\.\d+)?)\/(-?\d+(?:\.\d+)?)$/);if(m){const d=parseFloat(m[2]);return d===0?NaN:parseFloat(m[1])/d}
+  if(/^-?\d+(\.\d+)?$/.test(s))return parseFloat(s);return NaN;
+}
+function msg(el,t,k){el.textContent=t;el.className="msg"+(t?" "+k:"")}
+/* écriture des expressions, conventions du cours */
+function coefStr(a,first){ // pour a devant x² ou (x+h)²
+  if(eq(a,1))return first?"":"+ ";if(eq(a,-1))return first?"−":"− ";
+  const s=frac(Math.abs(a));return (a<0?(first?"−":"− "):(first?"":"+ "))+s;
+}
+function canon(a,h,k){
+  let s="f(x) = "+coefStr(a,true);
+  s+=eq(h,0)?"x²":"(x "+(h>0?"+ ":"− ")+frac(Math.abs(h))+")²";
+  if(!eq(k,0))s+=" "+(k>0?"+ ":"− ")+frac(Math.abs(k));
+  return s;
+}
+function dev(a,b,c){
+  let s="f(x) = "+coefStr(a,true)+"x²";
+  if(!eq(b,0))s+=" "+(b>0?"+ ":"− ")+(eq(Math.abs(b),1)?"":frac(Math.abs(b)))+"x";
+  if(!eq(c,0))s+=" "+(c>0?"+ ":"− ")+frac(Math.abs(c));
+  return s;
+}
+function manipList(a,h,k){
+  const L=[];
+  if(a<0)L.push("a < 0 : symétrie orthogonale (la parabole est retournée)");
+  if(Math.abs(a)>1)L.push("|a| > 1 : étirement vertical de facteur "+frac(Math.abs(a)));
+  else if(Math.abs(a)<1)L.push("|a| < 1 : contraction verticale de facteur "+frac(Math.abs(a)));
+  if(h>0)L.push("h = "+frac(h)+" > 0 : translation horizontale vers la GAUCHE de "+frac(h));
+  else if(h<0)L.push("h = "+frac(h)+" < 0 : translation horizontale vers la DROITE de "+frac(-h));
+  if(k>0)L.push("k = "+frac(k)+" > 0 : translation verticale vers le HAUT de "+frac(k));
+  else if(k<0)L.push("k = "+frac(k)+" < 0 : translation verticale vers le BAS de "+frac(-k));
+  if(!L.length)L.push("Aucune manipulation : c'est la fonction de référence x².");
+  return L;
+}
+
+/* ---------- Graphe ---------- */
+function Graph(svg){this.svg=svg;this.P=34;this.W=600;svg.innerHTML="";
+  ["grid","axis","under","curves","guides","hot","points"].forEach(n=>{const g=document.createElementNS(NS,"g");g.setAttribute("class","g-"+n);svg.appendChild(g);this[n]=g});}
+Graph.prototype.setWindow=function(xmin,xmax,ymin,ymax){
+  Object.assign(this,{xmin,xmax,ymin,ymax});["grid","axis","under","curves","guides","hot","points"].forEach(n=>this[n].innerHTML="");
+  const L=(g,x1,y1,x2,y2)=>{const l=document.createElementNS(NS,"line");l.setAttribute("x1",x1);l.setAttribute("y1",y1);l.setAttribute("x2",x2);l.setAttribute("y2",y2);g.appendChild(l)};
+  const T=(g,x,y,t,an)=>{const e=document.createElementNS(NS,"text");e.setAttribute("x",x);e.setAttribute("y",y);e.setAttribute("text-anchor",an||"middle");e.textContent=t;g.appendChild(e)};
+  const stx=(xmax-xmin)>16?2:1, sty=(ymax-ymin)>16?2:1;
+  for(let x=Math.ceil(xmin);x<=xmax;x++){const p=this.px(x,0)[0];L(this.grid,p,this.P,p,this.W-this.P)}
+  for(let y=Math.ceil(ymin);y<=ymax;y++){const p=this.px(0,y)[1];L(this.grid,this.P,p,this.W-this.P,p)}
+  const [ox,oy]=this.px(0,0);
+  L(this.axis,this.P,oy,this.W-this.P+6,oy);L(this.axis,ox,this.W-this.P,ox,this.P-6);
+  T(this.axis,this.W-this.P+2,oy-9,"x","end");T(this.axis,ox+11,this.P-2,"y","start");
+  for(let x=Math.ceil(xmin);x<=xmax;x++){if(x===0||x%stx)continue;const p=this.px(x,0)[0];T(this.axis,p,oy+17,String(x).replace("-","−"))}
+  for(let y=Math.ceil(ymin);y<=ymax;y++){if(y===0||y%sty)continue;const p=this.px(0,y)[1];T(this.axis,ox-7,p+4,String(y).replace("-","−"),"end")}
+  T(this.axis,ox-7,oy+16,"0","end");
+};
+Graph.prototype.px=function(x,y){const s=this.W-2*this.P;return [this.P+(x-this.xmin)/(this.xmax-this.xmin)*s,this.W-this.P-(y-this.ymin)/(this.ymax-this.ymin)*s]};
+Graph.prototype.fromEvent=function(ev){const pt=this.svg.createSVGPoint();pt.x=ev.clientX;pt.y=ev.clientY;const p=pt.matrixTransform(this.svg.getScreenCTM().inverse());return {px:p.x,py:p.y}};
+Graph.prototype.pathFor=function(f,a,b){a=a??this.xmin;b=b??this.xmax;let d="",pen=false;for(let i=0;i<=400;i++){const x=a+(b-a)*i/400,y=f(x);if(y<this.ymin-2||y>this.ymax+2){pen=false;continue}const [X,Y]=this.px(x,y);d+=(pen?"L":"M")+X.toFixed(1)+" "+Y.toFixed(1);pen=true}return d};
+Graph.prototype.curve=function(f,cls,layer){const p=document.createElementNS(NS,"path");p.setAttribute("d",this.pathFor(f));p.setAttribute("class",cls||"curve");(layer||this.curves).appendChild(p);return p};
+Graph.prototype.point=function(x,y,cls,label){const [X,Y]=this.px(x,y);const g=document.createElementNS(NS,"g");const c=document.createElementNS(NS,"circle");c.setAttribute("cx",X);c.setAttribute("cy",Y);c.setAttribute("r",7);c.setAttribute("class","pt "+(cls||""));g.appendChild(c);
+  if(label){const t=document.createElementNS(NS,"text");const right=X>this.W-150;t.setAttribute("x",right?X-11:X+11);t.setAttribute("y",Y<this.P+24?Y+24:Y-11);t.setAttribute("text-anchor",right?"end":"start");t.setAttribute("class","ptlabel");t.textContent=label;g.appendChild(t)}
+  this.points.appendChild(g);return g};
+Graph.prototype.vline=function(x,cls){const [X]=this.px(x,0);const l=document.createElementNS(NS,"line");l.setAttribute("x1",X);l.setAttribute("x2",X);l.setAttribute("y1",this.P);l.setAttribute("y2",this.W-this.P);l.setAttribute("class",cls||"axe");this.guides.appendChild(l);return l};
+Graph.prototype.near=function(ev,x,y,tol){const p=this.fromEvent(ev);const [X,Y]=this.px(x,y);return Math.hypot(p.px-X,p.py-Y)<(tol||24)};
+
+/* ---------- Onglets ---------- */
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",t===b));
+  document.querySelectorAll(".panel").forEach(p=>p.hidden=p.id!=="p-"+b.dataset.tab);
+}));
+
+/* ======================================================
+   1 · TRADUIS LA CONSIGNE  — f(x) = −x² + 2x + 3
+   ====================================================== */
+(function(){
+  const f=x=>-x*x+2*x+3;
+  const G=new Graph($("t-svg"));G.setWindow(-3.5,5.5,-6.5,5.5);
+  const FORMS=["Un nombre","Un point (x ; y)","Une équation x = …","Un intervalle","Une expression f(x) = …","Un tableau","Un mot ou une phrase"];
+  const C={ racines:"Δ = b² − 4ac, puis x₁,₂ = (−b ± √Δ) / 2a", oao:"f(0) = c", sommet:"h = b/2a et k = −Δ/4a, puis S(−h ; k)", axe:"h = b/2a, puis x = −h",
+    im:"k = −Δ/4a, et je regarde le signe de a", conc:"Je regarde le signe de a", delta:"Δ = b² − 4ac (je regarde son signe)", canon:"h et k, puis a(x + h)² + k",
+    crois:"L'abscisse du sommet (−h) et le signe de a", signes:"Les racines, puis le signe de a entre et hors des racines", absc:"f(2) : je remplace x par 2", ordo:"Je résous f(x) = −5 : je connais y, je cherche x",
+    minmax:"Le signe de a (minimum ou maximum), puis k", fact:"Les racines, puis a(x − x₁)(x − x₂)" };
+  const BANK=[
+    {c:"Détermine les racines de f.",t:"racines",k:"racines",f:0,why:"Racines = les valeurs de x pour lesquelles f(x) = 0 : là où la courbe touche l'axe des x."},
+    {c:"Détermine les coordonnées des points d'intersection de la parabole avec l'axe des abscisses.",t:"racines",k:"racines",f:1,why:"Axe des abscisses = axe des x. On y est à hauteur 0 : ce sont les racines, écrites comme points (x ; 0)."},
+    {c:"Résous f(x) = 0.",t:"racines",k:"racines",f:0,why:"f(x) = 0 veut dire « hauteur 0 » : c'est exactement la définition des racines."},
+    {c:"Donne l'ordonnée à l'origine (OAO).",t:"oao",k:"oao",f:0,why:"Ordonnée = y. Origine = là où x = 0. Donc l'OAO, c'est la hauteur quand x = 0 : c."},
+    {c:"Détermine le point d'intersection de la parabole avec l'axe des ordonnées.",t:"oao",k:"oao",f:1,why:"Axe des ordonnées = axe des y. On y est quand x = 0 : le point (0 ; c)."},
+    {c:"Détermine les coordonnées du sommet.",t:"sommet",k:"sommet",f:1,why:"Coordonnées = un point (x ; y). Le sommet, c'est S(−h ; k)."},
+    {c:"La fonction admet-elle un minimum ou un maximum ? Lequel ?",t:"sommet",k:"minmax",f:0,why:"Le minimum ou le maximum se trouve au sommet. Ici a < 0 : la parabole est ∩, donc c'est un maximum, qui vaut k."},
+    {c:"Donne l'équation de l'axe de symétrie.",t:"axe",k:"axe",f:2,why:"L'axe de symétrie est une droite verticale qui passe par le sommet. Sa réponse s'écrit As ≡ x = −h."},
+    {c:"Détermine l'ensemble image de f.",t:"im",k:"im",f:3,why:"Im f = toutes les hauteurs (y) atteintes par la courbe. Ici a < 0 : Im f = ]−∞ ; k]."},
+    {c:"Quelle est la concavité de la parabole ?",t:"courbe",k:"conc",f:6,why:"Concavité = vers où s'ouvre la parabole. a > 0 : vers le haut ∪ ; a < 0 : vers le bas ∩."},
+    {c:"Combien de fois la parabole coupe-t-elle l'axe des x ?",t:"racines",k:"delta",f:0,why:"C'est le rôle de Δ : Δ > 0 → 2 racines, Δ = 0 → 1, Δ < 0 → aucune."},
+    {c:"Exprime f sous forme canonique.",t:"sommet",k:"canon",f:4,why:"La forme canonique a(x + h)² + k « montre » le sommet S(−h ; k)."},
+    {c:"Donne les intervalles de croissance et de décroissance.",t:"sommet",k:"crois",f:3,why:"La courbe change de sens au sommet : avant −h elle monte (ici), après elle descend."},
+    {c:"Établis le tableau de signes de f.",t:"racines",k:"signes",f:5,why:"Le signe change aux racines : c'est là que la courbe passe au-dessus ou en dessous de l'axe des x."},
+    {c:"Détermine la coordonnée du point d'abscisse 2 de la parabole.",t:"absc",k:"absc",f:1,why:"Abscisse = x. On connaît x = 2, on calcule y = f(2) : le point (2 ; f(2))."},
+    {c:"Détermine les coordonnées des points d'ordonnée −5 de la parabole.",t:"ordo",k:"ordo",f:1,why:"Ordonnée = y. On connaît y = −5, on cherche x en résolvant f(x) = −5. Ce n'est PAS f(−5) !"},
+    {c:"Exprime f sous forme factorisée.",t:"racines",k:"fact",f:4,why:"La forme factorisée a(x − x₁)(x − x₂) se construit avec les racines."}
+  ];
+  /* hotspots */
+  const hot={};
+  function addHot(id,build){const g=document.createElementNS(NS,"g");g.setAttribute("class","hs");g.setAttribute("tabindex","0");g.dataset.id=id;build(g);G.hot.appendChild(g);hot[id]=g;
+    g.addEventListener("click",()=>pick(id));g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();pick(id)}})}
+  function el(tag,attrs,cls){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(cls)e.setAttribute("class",cls);return e}
+  function ptHot(g,pts){pts.forEach(([x,y])=>{const [X,Y]=G.px(x,y);g.appendChild(el("circle",{cx:X,cy:Y,r:20},"hit"));g.appendChild(el("circle",{cx:X,cy:Y,r:8},"vis pt-vis"))})}
+  addHot("courbe",g=>{const d=G.pathFor(f);g.appendChild(el("path",{d,"stroke-width":22,fill:"none"},"hit"));g.appendChild(el("path",{d},"vis ln-vis curvev"))});
+  addHot("axe",g=>{const [X]=G.px(1,0);g.appendChild(el("line",{x1:X,x2:X,y1:G.P,y2:G.W-G.P,"stroke-width":22},"hit"));g.appendChild(el("line",{x1:X,x2:X,y1:G.P,y2:G.W-G.P},"vis ln-vis dash"))});
+  addHot("ordo",g=>{const [,Y]=G.px(0,-5);g.appendChild(el("line",{x1:G.P,x2:G.W-G.P,y1:Y,y2:Y,"stroke-width":22},"hit"));g.appendChild(el("line",{x1:G.P,x2:G.W-G.P,y1:Y,y2:Y},"vis ln-vis dash"));ptHot(g,[[-2,-5],[4,-5]])});
+  addHot("im",g=>{const [X,Y1]=G.px(-3,4);const [,Y2]=G.px(-3,-6.4);g.appendChild(el("line",{x1:X,x2:X,y1:Y1,y2:Y2,"stroke-width":26},"hit"));g.appendChild(el("line",{x1:X,x2:X,y1:Y1,y2:Y2},"vis ln-vis bar"));const [,Ys]=G.px(0,4);g.appendChild(el("line",{x1:X,x2:G.px(1,0)[0],y1:Ys,y2:Ys,"stroke-dasharray":"3 5"},"vis ln-vis"))});
+  addHot("racines",g=>ptHot(g,[[-1,0],[3,0]]));
+  addHot("oao",g=>ptHot(g,[[0,3]]));
+  addHot("absc",g=>ptHot(g,[[2,3]]));
+  addHot("sommet",g=>ptHot(g,[[1,4]]));
+  const NAMES={courbe:"la forme de la courbe",axe:"la droite verticale pointillée",ordo:"la ligne horizontale y = −5 et ses 2 points",im:"la barre des hauteurs atteintes",racines:"les 2 points sur l'axe des x",oao:"le point sur l'axe des y",absc:"le point d'abscisse 2",sommet:"le sommet"};
+  let order=shuffle(BANK),idx=0,item,stage,clean,done=0,perfect=0;
+  function clearMarks(){Object.values(hot).forEach(g=>g.classList.remove("good","badc"))}
+  function load(){
+    if(idx>=order.length){order=shuffle(BANK);idx=0}
+    item=order[idx++];stage=1;clean=true;clearMarks();
+    $("t-cons").textContent="« "+item.c+" »";
+    ["t-s2","t-calc","t-s3","t-form","t-next"].forEach(i=>$(i).hidden=true);
+    msg($("t-msg"),"","");
+  }
+  function pick(id){
+    if(stage!==1)return;
+    if(id===item.t){hot[id].classList.add("good");stage=2;
+      msg($("t-msg"),"Oui : c'est "+NAMES[id]+". "+item.why,"ok");
+      const opts=shuffle([item.k,...shuffle(Object.keys(C).filter(k=>k!==item.k&&C[k]!==C[item.k])).slice(0,3)]);
+      $("t-calc").innerHTML="";opts.forEach(k=>{const b=document.createElement("button");b.className="opt";b.textContent=C[k];b.onclick=()=>calc(k,b);$("t-calc").appendChild(b)});
+      $("t-s2").hidden=false;$("t-calc").hidden=false;
+    }else{clean=false;hot[id].classList.add("badc");setTimeout(()=>hot[id].classList.remove("badc"),900);
+      msg($("t-msg"),"Non, ça c'est "+NAMES[id]+". Relis les mots de la consigne : abscisse = x, ordonnée = y, origine = là où x = 0.","bad")}
+  }
+  function calc(k,b){
+    if(stage!==2)return;
+    if(k===item.k){b.classList.add("right");stage=3;[...$("t-calc").children].forEach(x=>x.disabled=true);
+      $("t-form").innerHTML="";FORMS.forEach((fm,i)=>{const bb=document.createElement("button");bb.className="opt";bb.textContent=fm;bb.onclick=()=>form(i,bb);$("t-form").appendChild(bb)});
+      $("t-s3").hidden=false;$("t-form").hidden=false;msg($("t-msg"),"Bon calcul. Et la réponse, elle a quelle forme ?","info");
+    }else{clean=false;b.classList.add("wrong");b.disabled=true;msg($("t-msg"),"Ce calcul-là sert à autre chose. Repense à ce qu'on cherche sur le graphe.","bad")}
+  }
+  function form(i,b){
+    if(stage!==3)return;
+    if(i===item.f){b.classList.add("right");stage=4;[...$("t-form").children].forEach(x=>x.disabled=true);done++;if(clean)perfect++;
+      $("t-score").textContent="Sans faute : "+perfect+" / "+done;$("t-next").hidden=false;
+      msg($("t-msg"),(clean?"Parfait, sans faute ! ":"Trouvé. ")+"Consigne → endroit → calcul → forme : c'est ça, traduire.","ok");$("t-next").focus();
+    }else{clean=false;b.classList.add("wrong");b.disabled=true;
+      msg($("t-msg"),"Pas cette forme. Indice : un point s'écrit (x ; y), une droite verticale x = …, une zone de valeurs [ ; ].","bad")}
+  }
+  $("t-next").onclick=load;load();
+})();
+
+/* ======================================================
+   2 · LES MANETTES a, h, k  (forme a(x + h)² + k)
+   ====================================================== */
+(function(){
+  const AV=[-3,-2,-1,-1/2,-1/3,1/3,1/2,1,2,3];
+  const G=new Graph($("m-svg"));G.setWindow(-7,7,-7,7);
+  let mode="explore",target=null,tries=0,wins=0,rounds=0;
+  const val=()=>({a:AV[+$("m-a").value],h:+$("m-h").value,k:+$("m-k").value});
+  function draw(){
+    const {a,h,k}=val();G.curves.innerHTML="";G.guides.innerHTML="";G.points.innerHTML="";G.under.innerHTML="";
+    G.curve(x=>x*x,"curve ghost",G.under);
+    if(target)G.curve(x=>target.a*(x+target.h)**2+target.k,"curve target",G.under);
+    G.curve(x=>a*(x+h)**2+k);
+    G.vline(-h);G.point(-h,k,"","S("+frac(-h)+" ; "+frac(k)+")");
+    $("m-ao").textContent=frac(a);$("m-ho").textContent=frac(h);$("m-ko").textContent=frac(k);
+    const hide=mode==="defi";
+    $("m-expr").textContent=canon(a,h,k);
+    $("m-sum").textContent="S(−h ; k) = ("+frac(-h)+" ; "+frac(k)+")   ·   As ≡ x = "+frac(-h);
+    $("m-manips").innerHTML="";manipList(a,h,k).forEach(t=>{const li=document.createElement("li");li.textContent=t;$("m-manips").appendChild(li)});
+  }
+  function newTarget(){
+    do{target={a:rand([-2,-1,-1/2,1/2,1,2]),h:Math.floor(Math.random()*7)-3,k:Math.floor(Math.random()*7)-3}}while(target.h===0&&target.k===0);
+    $("m-a").value=7;$("m-h").value=0;$("m-k").value=0;tries=0;rounds++;
+    msg($("m-msg"),"Règle a, h et k pour que ta parabole bleue recouvre l'orange. Commence par le sommet, puis l'ouverture : depuis le sommet, avance d'1 vers la droite et regarde de combien la courbe monte ou descend : c'est a.","info");draw();
+  }
+  function setMode(m){mode=m;$("m-defi-btns").hidden=m!=="defi";
+    $("m-mode-explore").className="btn"+(m==="explore"?"":" ghost");$("m-mode-defi").className="btn"+(m==="defi"?"":" ghost");
+    if(m==="defi"){newTarget()}else{target=null;msg($("m-msg"),"Bouge une manette à la fois et lis la phrase qui change : c'est exactement ce qu'on te demande dans « Donne les manipulations ».","info");draw()}
+    $("m-score").textContent=m==="defi"?"Réussis : "+wins:"";
+  }
+  ["m-a","m-h","m-k"].forEach(id=>$(id).addEventListener("input",draw));
+  $("m-check").onclick=()=>{
+    const {a,h,k}=val();tries++;
+    if(eq(a,target.a)&&h===target.h&&k===target.k){wins++;$("m-score").textContent="Réussis : "+wins;
+      msg($("m-msg"),"Bravo ! "+canon(a,h,k)+" : a = "+frac(a)+", h = "+frac(h)+", k = "+frac(k)+". Sommet S("+frac(-h)+" ; "+frac(k)+"), As ≡ x = "+frac(-h)+".","ok");}
+    else{const tips=[];
+      if(!(-h===-target.h&&k===target.k))tips.push("le sommet n'est pas au bon endroit (rappel : sommet à droite → h négatif)");
+      else if(!eq(a,target.a))tips.push(Math.sign(a)!==Math.sign(target.a)?"le sens est faux : ∪ → a > 0, ∩ → a < 0":"l'ouverture n'est pas la bonne : depuis le sommet, avance d'1 à droite et compte de combien tu montes ou descends");
+      msg($("m-msg"),"Pas encore : "+tips.join(" ; ")+".","bad")}
+  };
+  $("m-new").onclick=newTarget;
+  $("m-mode-explore").onclick=()=>setMode("explore");$("m-mode-defi").onclick=()=>setMode("defi");
+  setMode("explore");
+})();
+
+/* ======================================================
+   3 · DÉTECTIVE DES SIGNES  (a, b, c, Δ lus sur le graphe)
+   ====================================================== */
+(function(){
+  const G=new Graph($("s-svg"));G.setWindow(-7,7,-8,8);
+  let P,answered,clean,done=0,perfect=0;
+  const sgn=v=>eq(v,0)?0:(v>0?1:-1);
+  const LBL={"-1":"< 0","0":"= 0","1":"> 0"};
+  function gen(){
+    for(;;){
+      const a=rand([-2,-1,-1/2,1/2,1,2]),xs=rand([-3,-2,-1,0,1,2,3]),ys=rand([-4,-3,-2,-1,0,1,2,3,4]);
+      const b=-2*a*xs,c=a*xs*xs+ys,D=-4*a*ys;
+      if(Math.abs(c)>7)continue;if(xs===0&&Math.random()<0.6)continue;if(ys===0&&Math.random()<0.6)continue;if(eq(c,0)&&Math.random()<0.6)continue;
+      return {a,b,c,D,xs,ys};
+    }
+  }
+  const WHY={
+    a:p=>p.a>0?"La parabole s'ouvre vers le haut (∪) : a > 0.":"La parabole s'ouvre vers le bas (∩) : a < 0.",
+    c:p=>"c = OAO : la courbe coupe l'axe des y "+(eq(p.c,0)?"à l'origine, donc c = 0.":(p.c>0?"au-dessus de 0, donc c > 0.":"en dessous de 0, donc c < 0.")),
+    D:p=>{const n=eq(p.D,0)?1:(p.D>0?2:0);return "La courbe touche l'axe des x "+(n===2?"2 fois : Δ > 0.":n===1?"1 fois (au sommet) : Δ = 0.":"0 fois : Δ < 0.")},
+    b:p=>{if(p.xs===0)return "Le sommet est sur l'axe des y : h = 0, donc b = 0.";const h=-p.xs;
+      return "Sommet "+(p.xs>0?"à droite":"à gauche")+" de l'axe des y → h "+(h>0?"> 0":"< 0")+". Comme h = b/2a, b = 2a·h : a "+(p.a>0?"> 0":"< 0")+" et h "+(h>0?"> 0":"< 0")+" → b "+(p.a*h>0?"> 0.":"< 0.")}
+  };
+  function load(){
+    P=gen();answered={};clean=true;G.curves.innerHTML="";G.points.innerHTML="";
+    G.curve(x=>P.a*x*x+P.b*x+P.c);
+    $("s-qs").innerHTML="";
+    [["a","a"],["b","b"],["c","c"],["D","Δ"]].forEach(([key,name])=>{
+      const q=document.createElement("div");q.className="q";q.textContent=name;$("s-qs").appendChild(q);
+      const box=document.createElement("div");box.className="sgn";
+      [-1,0,1].forEach(s=>{if(key==="a"&&s===0)return;const b=document.createElement("button");b.textContent=LBL[s];b.onclick=()=>answer(key,s,b,box);box.appendChild(b)});
+      $("s-qs").appendChild(box);
+    });
+    msg($("s-msg"),"Commence par a (le sens), puis c (l'axe des y), puis Δ (l'axe des x). b est le plus dur : garde-le pour la fin.","info");
+  }
+  function answer(key,s,b,box){
+    if(answered[key])return;const truth=sgn(key==="D"?P.D:P[key]);
+    if(s===truth){answered[key]=true;b.classList.add("right");[...box.children].forEach(x=>x.disabled=true);msg($("s-msg"),WHY[key](P),"ok");
+      if(Object.keys(answered).length===4){done++;if(clean)perfect++;$("s-score").textContent="Sans faute : "+perfect+" / "+done;
+        msg($("s-msg"),(clean?"Les 4 sans faute ! ":"Les 4 trouvés. ")+"Ici : "+dev(P.a,P.b,P.c)+", Δ = "+frac(P.D)+".","ok")}}
+    else{clean=false;b.classList.add("wrong");b.disabled=true;msg($("s-msg"),"Non. "+WHY[key](P),"bad")}
+  }
+  $("s-next").onclick=load;load();
+})();
+
+/* ======================================================
+   4 · CONSTRUIS LA PARABOLE  (méthode du cours)
+   ====================================================== */
+(function(){
+  const FUN=[[-1,2,3],[2,-4,-6],[1,4,3],[-1,4,-5],[1,-6,5],[-2,-4,6],[1,-2,1],[-1,-2,3],[1,-2,-3]];
+  const G=new Graph($("c-svg"));
+  let F,step,last=null,clickTarget=null;
+  function setup(){
+    let t;do{t=rand(FUN)}while(t===last);last=t;
+    const [a,b,c]=t,D=b*b-4*a*c,h=b/(2*a),k=-D/(4*a);
+    const roots=D>0?[(-b+Math.sqrt(D))/(2*a),(-b-Math.sqrt(D))/(2*a)].sort((p,q)=>p-q):D===0?[-b/(2*a)]:[];
+    F={a,b,c,D,h,k,roots,f:x=>a*x*x+b*x+c};
+    const xs=[-h,0,-2*h,...roots];
+    const xmin=Math.floor(Math.min(...xs))-2,xmax=Math.ceil(Math.max(...xs))+2;
+    let ylo=Math.min(k,c,0)-1,yhi=Math.max(k,c,0)+1;
+    if(a>0)yhi+=3;else ylo-=3;
+    G.setWindow(xmin,xmax,Math.floor(ylo),Math.ceil(yhi));
+    $("c-f").textContent=dev(a,b,c);$("c-recap").hidden=true;$("c-recap").innerHTML="";
+    step=0;run();
+  }
+  function inputs(list){ // list: [{id,label}]
+    const box=$("c-inputs");box.innerHTML="";
+    list.forEach(o=>{const l=document.createElement("label");l.htmlFor=o.id;l.textContent=o.label;const i=document.createElement("input");i.type="text";i.id=o.id;i.inputMode="decimal";i.autocomplete="off";box.append(l,i)});
+    if(list.length){const b=document.createElement("button");b.className="btn";b.textContent="Vérifier";b.id="c-ok";box.appendChild(b);
+      box.querySelectorAll("input").forEach(i=>i.addEventListener("keydown",e=>{if(e.key==="Enter")b.click()}));setTimeout(()=>box.querySelector("input").focus(),0);return b}
+  }
+  function choices(list,cb){const box=$("c-choices");box.innerHTML="";box.hidden=!list.length;list.forEach(([t,v])=>{const b=document.createElement("button");b.className="opt";b.textContent=t;b.onclick=()=>cb(v,b);box.appendChild(b)})}
+  function ask(cons,help,prog){$("c-cons").textContent="« "+cons+" »";$("c-help").textContent=help;$("c-prog").textContent=prog;msg($("c-msg"),"","");clickTarget=null;inputs([]);choices([],()=>{})}
+  function next(){step++;setTimeout(run,650)}
+  const T=7;
+  function run(){
+    const {a,b,c,D,h,k,roots}=F;
+    switch(step){
+    case 0: ask("Quelle est la concavité de la parabole ?","Concavité = sens d'ouverture. Regarde le signe de a. Ici a = "+frac(a)+".","Étape 1 / "+T);
+      choices([["∪ vers le haut (a > 0)",1],["∩ vers le bas (a < 0)",-1]],(v,bt)=>{if(v===Math.sign(a)){bt.classList.add("right");msg($("c-msg"),"Oui : a = "+frac(a)+(a>0?" > 0 : la parabole sourit ∪, le sommet est un MINIMUM.":" < 0 : la parabole est retournée ∩, le sommet est un MAXIMUM."),"ok");next()}else{bt.classList.add("wrong");msg($("c-msg"),"Regarde le signe de a = "+frac(a)+".","bad")}});break;
+    case 1: ask("Donne l'ordonnée à l'origine et place-la.","Ordonnée = y, origine = là où x = 0. OAO = f(0) = c. Clique sur le point (0 ; c).","Étape 2 / "+T);
+      clickTarget={x:0,y:c,ok:()=>{G.point(0,c,"ok","OAO (0 ; "+frac(c)+")");msg($("c-msg"),"OAO = c = "+frac(c)+" : la courbe coupe l'axe des y en (0 ; "+frac(c)+").","ok");next()},hint:"Le point est SUR l'axe des y (x = 0), à la hauteur c = "+frac(c)+"."};break;
+    case 2: {ask("Calcule le discriminant.","Δ = b² − 4ac, avec a = "+frac(a)+", b = "+frac(b)+", c = "+frac(c)+". Attention aux signes : mets les négatifs entre parenthèses.","Étape 3 / "+T);
+      const bt=inputs([{id:"c-d",label:"Δ ="}]);bt.onclick=()=>{const v=parseNum($("c-d").value);
+        if(eq(v,D)){msg($("c-msg"),"Δ = "+frac(D)+(D>0?" > 0 : la parabole coupe l'axe des x en 2 points (2 racines).":D===0?" = 0 : elle touche l'axe des x en 1 seul point (racine double, au sommet).":" < 0 : elle ne touche jamais l'axe des x (pas de racine)."),"ok");next()}
+        else msg($("c-msg"),"Pas tout à fait. Δ = ("+frac(b)+")² − 4 · ("+frac(a)+") · ("+frac(c)+") = "+frac(b*b)+" − ("+frac(4*a*c)+"). Recalcule.","bad")};break;}
+    case 3: {ask("Détermine les coordonnées du sommet.","Méthode du cours : h = b/2a, k = −Δ/4a, puis S(−h ; k). Les fractions sont acceptées (ex. 3/2).","Étape 4 / "+T);
+      const bt=inputs([{id:"c-h",label:"h ="},{id:"c-k",label:"k ="}]);bt.onclick=()=>{const vh=parseNum($("c-h").value),vk=parseNum($("c-k").value);
+        const okh=eq(vh,h),okk=eq(vk,k);
+        if(okh&&okk){msg($("c-msg"),"h = "+frac(h)+" et k = "+frac(k)+". Donc S(−h ; k) = ("+frac(-h)+" ; "+frac(k)+"). Attention au signe : on prend −h ! Clique maintenant sur le sommet.","ok");
+          inputs([]);clickTarget={x:-h,y:k,ok:()=>{G.point(-h,k,"ok","S("+frac(-h)+" ; "+frac(k)+")");G.vline(-h);msg($("c-msg"),"Sommet placé. La droite verte, c'est l'axe de symétrie : As ≡ x = −h = "+frac(-h)+".","ok");next()},hint:"S(−h ; k) : x = "+frac(-h)+" (et pas "+frac(h)+"), y = "+frac(k)+"."}}
+        else msg($("c-msg"),(okh?"":"h = b/2a = "+frac(b)+" / (2 · "+frac(a)+"). ")+(okk?"":"k = −Δ/4a = −("+frac(D)+") / (4 · "+frac(a)+")."),"bad")};break;}
+    case 4: ask("Utilise la symétrie : place le symétrique de l'OAO.","L'axe x = "+frac(-h)+" est un miroir. L'OAO est à "+frac(Math.abs(h))+" unité(s) de l'axe : son reflet est de l'autre côté, à la même hauteur.","Étape 5 / "+T);
+      clickTarget={x:-2*h,y:c,ok:()=>{G.point(-2*h,c,"ok","("+frac(-2*h)+" ; "+frac(c)+")");msg($("c-msg"),"Gratuit, sans calcul : le point ("+frac(-2*h)+" ; "+frac(c)+") est aussi sur la parabole.","ok");next()},hint:"Même hauteur que l'OAO (y = "+frac(c)+"), de l'autre côté de l'axe vert."};break;
+    case 5: if(D<0){ask("Détermine les racines.","Δ < 0 : on ne peut pas calculer √Δ.","Étape 6 / "+T);msg($("c-msg"),"Δ = "+frac(D)+" < 0 : pas de racine. La parabole ne coupe pas l'axe des x. On écrit : « pas de racine ».","ok");next();break}
+      if(D===0){ask("Détermine les racines.","Δ = 0 : une seule racine, x = −b/2a.","Étape 6 / "+T);msg($("c-msg"),"Δ = 0 : une racine double x = "+frac(roots[0])+". C'est l'abscisse du sommet : le sommet est posé sur l'axe des x.","ok");next();break}
+      {ask("Détermine les racines et place-les.","x₁,₂ = (−b ± √Δ) / 2a. Ici √Δ = "+frac(Math.sqrt(D))+". L'ordre n'a pas d'importance.","Étape 6 / "+T);
+      const bt=inputs([{id:"c-x1",label:"x₁ ="},{id:"c-x2",label:"x₂ ="}]);bt.onclick=()=>{const u=parseNum($("c-x1").value),v=parseNum($("c-x2").value);
+        const ok=(eq(u,roots[0])&&eq(v,roots[1]))||(eq(u,roots[1])&&eq(v,roots[0]));
+        if(ok){roots.forEach(r=>G.point(r,0,"ok","("+frac(r)+" ; 0)"));msg($("c-msg"),"Racines x₁ = "+frac(roots[0])+" et x₂ = "+frac(roots[1])+" : les points ("+frac(roots[0])+" ; 0) et ("+frac(roots[1])+" ; 0). Vérifie : ils sont symétriques par rapport à l'axe.","ok");inputs([]);next()}
+        else msg($("c-msg"),"x = (−("+frac(b)+") ± "+frac(Math.sqrt(D))+") / (2 · "+frac(a)+"). Fais le + puis le −.","bad")};}break;
+    case 6: {ask("Trace la parabole.","Relie les points à main levée, en arrondi, en passant par le sommet.","Étape 7 / "+T);
+      const p=G.curve(F.f,"curve");const L=p.getTotalLength();p.style.setProperty("--len",L);p.classList.add("draw");
+      msg($("c-msg"),"Terminé ! Voici toutes les caractéristiques que tu viens de trouver :","ok");
+      const im=a>0?"["+frac(k)+" ; +∞[":"]−∞ ; "+frac(k)+"]";
+      const sg=D>0?(a>0?"+ 0 − 0 +":"− 0 + 0 −"):D===0?(a>0?"+ 0 +":"− 0 −"):(a>0?"toujours +":"toujours −");
+      const R=["Dom f = ℝ","Im f = "+im,"Racines : "+(D>0?frac(roots[0])+" et "+frac(roots[1]):D===0?frac(roots[0])+" (double)":"aucune"),"Sommet : S("+frac(-h)+" ; "+frac(k)+"), c'est un "+(a>0?"minimum":"maximum"),"OAO : "+frac(c),"As ≡ x = "+frac(-h),"Forme canonique : "+canon(a,h,k),"Signe de f : "+sg+(D>0?" (racines "+frac(roots[0])+" et "+frac(roots[1])+")":""),"Variations : "+(a>0?"décroissante puis croissante":"croissante puis décroissante")+" (changement en x = "+frac(-h)+")"];
+      $("c-recap").innerHTML="";R.forEach(t=>{const li=document.createElement("li");li.textContent=t;$("c-recap").appendChild(li)});$("c-recap").hidden=false;break;}
+    }
+  }
+  G.svg.addEventListener("click",ev=>{
+    if(!clickTarget)return;
+    if(G.near(ev,clickTarget.x,clickTarget.y)){const t=clickTarget;clickTarget=null;t.ok()}
+    else{const p=G.fromEvent(ev);const c=document.createElementNS(NS,"circle");c.setAttribute("cx",p.px);c.setAttribute("cy",p.py);c.setAttribute("r",7);c.setAttribute("class","pt bad");G.points.appendChild(c);setTimeout(()=>c.remove(),800);msg($("c-msg"),"Pas là. "+clickTarget.hint,"bad")}
+  });
+  $("c-new").onclick=setup;setup();
+})();
+})();
+</script>
+</body>
+</html>
