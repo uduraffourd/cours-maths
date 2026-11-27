@@ -84,6 +84,7 @@ svg.graph{width:100%;height:auto;display:block;touch-action:manipulation;user-se
 input[type=range]{width:100%;accent-color:var(--trail)}
 select{font:inherit;padding:8px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink)}
 .hint{color:var(--muted);font-size:15px}
+.sign{font:inherit;font-weight:800;font-size:19px;min-width:44px;padding:8px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
 </style>
 </head>
 <body>
@@ -236,6 +237,10 @@ document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{
   document.querySelectorAll(".panel").forEach(p=>p.hidden=p.id!=="p-"+b.dataset.tab);
 }));
 function msg(el,text,kind){el.textContent=text;el.className="msg"+(text?" "+kind:"")}
+function addSign(inp){const b=document.createElement("button");b.type="button";b.className="sign";b.textContent="±";b.setAttribute("aria-label","Changer le signe");
+  b.addEventListener("click",()=>{const v=inp.value.trim();inp.value=/^[-−–]/.test(v)?v.replace(/^[-−–]\s*/,""):"−"+v;inp.focus()});inp.after(b);return b}
+addSign(document.getElementById("d-x"));addSign(document.getElementById("q-y"));
+
 function pulse(box){box.classList.add("run");setTimeout(()=>box.classList.remove("run"),260)}
 
 /* ---------- Mode 1 : Devine la règle (avec pièges) ---------- */

@@ -73,6 +73,7 @@ label{font-weight:600}
 .sgn button.right{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
 .sgn button.wrong{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
 .hint{color:var(--muted);font-size:15px}
+.sign{font:inherit;font-weight:800;font-size:19px;min-width:44px;padding:8px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
 svg.graph{width:100%;height:auto;display:block;touch-action:manipulation;user-select:none}
 .g-grid line{stroke:var(--grid);stroke-width:1}
 .g-axis line{stroke:var(--axis);stroke-width:1.6}
@@ -209,6 +210,9 @@ function parseNum(s){
   if(/^-?\d+(\.\d+)?$/.test(s))return parseFloat(s);return NaN;
 }
 function msg(el,t,k){el.textContent=t;el.className="msg"+(t?" "+k:"")}
+function addSign(inp){const b=document.createElement("button");b.type="button";b.className="sign";b.textContent="±";b.setAttribute("aria-label","Changer le signe");
+  b.addEventListener("click",()=>{const v=inp.value.trim();inp.value=/^[-−–]/.test(v)?v.replace(/^[-−–]\s*/,""):"−"+v;inp.focus()});inp.after(b);return b}
+
 /* écriture des expressions, conventions du cours */
 function coefStr(a,first){ // pour a devant x² ou (x+h)²
   if(eq(a,1))return first?"":"+ ";if(eq(a,-1))return first?"−":"− ";
@@ -471,7 +475,7 @@ document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{
   }
   function inputs(list){ // list: [{id,label}]
     const box=$("c-inputs");box.innerHTML="";
-    list.forEach(o=>{const l=document.createElement("label");l.htmlFor=o.id;l.textContent=o.label;const i=document.createElement("input");i.type="text";i.id=o.id;i.inputMode="decimal";i.autocomplete="off";box.append(l,i)});
+    list.forEach(o=>{const l=document.createElement("label");l.htmlFor=o.id;l.textContent=o.label;const i=document.createElement("input");i.type="text";i.id=o.id;i.inputMode="decimal";i.autocomplete="off";box.append(l,i);addSign(i)});
     if(list.length){const b=document.createElement("button");b.className="btn";b.textContent="Vérifier";b.id="c-ok";box.appendChild(b);
       box.querySelectorAll("input").forEach(i=>i.addEventListener("keydown",e=>{if(e.key==="Enter")b.click()}));setTimeout(()=>box.querySelector("input").focus(),0);return b}
   }
@@ -490,7 +494,7 @@ document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{
       const bt=inputs([{id:"c-d",label:"Δ ="}]);bt.onclick=()=>{const v=parseNum($("c-d").value);
         if(eq(v,D)){msg($("c-msg"),"Δ = "+frac(D)+(D>0?" > 0 : la parabole coupe l'axe des x en 2 points (2 racines).":D===0?" = 0 : elle touche l'axe des x en 1 seul point (racine double, au sommet).":" < 0 : elle ne touche jamais l'axe des x (pas de racine)."),"ok");next()}
         else msg($("c-msg"),"Pas tout à fait. Δ = ("+frac(b)+")² − 4 · ("+frac(a)+") · ("+frac(c)+") = "+frac(b*b)+" − ("+frac(4*a*c)+"). Recalcule.","bad")};break;}
-    case 3: {ask("Détermine les coordonnées du sommet.","Méthode du cours : h = b/2a, k = −Δ/4a, puis S(−h ; k). Les fractions sont acceptées (ex. 3/2).","Étape 4 / "+T);
+    case 3: {ask("Détermine les coordonnées du sommet.","Méthode du cours : h = b/2a, k = −Δ/4a, puis S(−h ; k). Pour un nombre négatif, utilise le bouton ±.","Étape 4 / "+T);
       const bt=inputs([{id:"c-h",label:"h ="},{id:"c-k",label:"k ="}]);bt.onclick=()=>{const vh=parseNum($("c-h").value),vk=parseNum($("c-k").value);
         const okh=eq(vh,h),okk=eq(vk,k);
         if(okh&&okk){msg($("c-msg"),"h = "+frac(h)+" et k = "+frac(k)+". Donc S(−h ; k) = ("+frac(-h)+" ; "+frac(k)+"). Attention au signe : on prend −h ! Clique maintenant sur le sommet.","ok");
